@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试mount函数</title>
+  <script src="./../../dist/vue.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    const instance = new Vue( {
+      data: {
+        msg: 'Hello Vue'
+      },
+      template: '<h1>{{msg}}</h1>',
+      render: h => h('h1', 'Hello Vue')
+    }).$mount('#app')
+  </script>
+</body>
+</html>

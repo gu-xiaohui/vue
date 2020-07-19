@@ -9,6 +9,7 @@ const version = process.env.VERSION || require('../package.json').version
 const weexVersion = process.env.WEEX_VERSION || require('../packages/weex-vue-framework/package.json').version
 const featureFlags = require('./feature-flags')
 
+// 文件头，给打包的文件生成一个通用的文件头
 const banner =
   '/*!\n' +
   ` * Vue.js v${version}\n` +
@@ -27,6 +28,7 @@ const weexFactoryPlugin = {
 
 const aliases = require('./alias')
 const resolve = p => {
+  // 截取路径的第一个字符串，web/weex等
   const base = p.split('/')[0]
   if (aliases[base]) {
     return path.resolve(aliases[base], p.slice(base.length + 1))
@@ -263,6 +265,8 @@ function genConfig (name) {
   return config
 }
 
+// 判断环境变量是否有TARGET
+// 有的话，使用genConfig生成对应的配置文件
 if (process.env.TARGET) {
   module.exports = genConfig(process.env.TARGET)
 } else {

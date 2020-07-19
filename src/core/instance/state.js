@@ -339,6 +339,7 @@ export function stateMixin (Vue: Class<Component>) {
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 
+  // 添加实例方法
   Vue.prototype.$set = set
   Vue.prototype.$delete = del
 
