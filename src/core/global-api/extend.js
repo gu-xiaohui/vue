@@ -33,6 +33,7 @@ export function initExtend (Vue: GlobalAPI) {
     const Sub = function VueComponent (options) {
       this._init(options)
     }
+    // 继承Vue，并返回组件
     Sub.prototype = Object.create(Super.prototype)
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
@@ -51,7 +52,6 @@ export function initExtend (Vue: GlobalAPI) {
     if (Sub.options.computed) {
       initComputed(Sub)
     }
-
     // allow further extension/mixin/plugin usage
     Sub.extend = Super.extend
     Sub.mixin = Super.mixin
