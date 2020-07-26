@@ -35,6 +35,7 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
+// 将状态代理到this上
 export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
@@ -51,8 +52,10 @@ export function initState (vm: Component) {
   if (opts.props) initProps(vm, opts.props)
   if (opts.methods) initMethods(vm, opts.methods)
   if (opts.data) {
+    // 遍历成员，并注入到vue实例中
     initData(vm)
   } else {
+    // 没有的话，将_data初始化为响应式空对象
     observe(vm._data = {}, true /* asRootData */)
   }
   if (opts.computed) initComputed(vm, opts.computed)
@@ -85,6 +88,7 @@ function initProps (vm: Component, propsOptions: Object) {
           vm
         )
       }
+      // 将所有props属性转换成getter/setter
       defineReactive(props, key, value, () => {
         if (!isRoot && !isUpdatingChildComponent) {
           warn(
@@ -111,6 +115,8 @@ function initProps (vm: Component, propsOptions: Object) {
 
 function initData (vm: Component) {
   let data = vm.$options.data
+  // 初始化_data, 组件中data是函数，调用函数返回结果，
+  // 如果不是函数，直接返回data
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
@@ -123,10 +129,14 @@ function initData (vm: Component) {
     )
   }
   // proxy data on instance
+  // 获取data中的所有属性
   const keys = Object.keys(data)
+  // 获取props
   const props = vm.$options.props
+  // 获取methods
   const methods = vm.$options.methods
   let i = keys.length
+  // 判断data上的成员是否和props/methods重名，重名则发出警告
   while (i--) {
     const key = keys[i]
     if (process.env.NODE_ENV !== 'production') {
@@ -143,11 +153,14 @@ function initData (vm: Component) {
         `Use prop default value instead.`,
         vm
       )
+      // 判断是否以_或者$开头
     } else if (!isReserved(key)) {
+      // 将属性代理到vm中
       proxy(vm, `_data`, key)
     }
   }
   // observe data
+  // 将data转换成响应式的
   observe(data, true /* asRootData */)
 }
 
@@ -261,6 +274,7 @@ function createGetterInvoker(fn) {
 
 function initMethods (vm: Component, methods: Object) {
   const props = vm.$options.props
+  // 判断是否重名，重名抛警告，判断是否$开头，如果是，跑警告
   for (const key in methods) {
     if (process.env.NODE_ENV !== 'production') {
       if (typeof methods[key] !== 'function') {

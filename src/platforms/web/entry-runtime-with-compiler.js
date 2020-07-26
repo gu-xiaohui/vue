@@ -70,7 +70,7 @@ Vue.prototype.$mount = function (
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
         mark('compile')
       }
-
+// 如果有template， 将template编译成AST并返回一个render函数
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
         shouldDecodeNewlines,
@@ -78,7 +78,9 @@ Vue.prototype.$mount = function (
         delimiters: options.delimiters,
         comments: options.comments
       }, this)
+      // 将返回的render函数存储在options中
       options.render = render
+      // staticRenderFns是一个优化函数，也挂载到options中
       options.staticRenderFns = staticRenderFns
 
       /* istanbul ignore if */

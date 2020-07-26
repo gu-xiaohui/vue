@@ -49,6 +49,7 @@ export default class Watcher {
     options?: ?Object,
     isRenderWatcher?: boolean
   ) {
+    // 记录vue实例
     this.vm = vm
     if (isRenderWatcher) {
       vm._watcher = this
@@ -58,6 +59,7 @@ export default class Watcher {
     if (options) {
       this.deep = !!options.deep
       this.user = !!options.user
+      // 延迟执行，更新视图，计算属性中会延迟执行
       this.lazy = !!options.lazy
       this.sync = !!options.sync
       this.before = options.before
@@ -66,6 +68,7 @@ export default class Watcher {
     }
     this.cb = cb
     this.id = ++uid // uid for batching
+    // 表示watcher状态，是否为活跃的watcher
     this.active = true
     this.dirty = this.lazy // for lazy watchers
     this.deps = []
@@ -76,9 +79,11 @@ export default class Watcher {
       ? expOrFn.toString()
       : ''
     // parse expression for getter
+    // updateComponent，第二个参数传入的
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
+      // 如果是字符串，侦听器的时候传入字符串
       this.getter = parsePath(expOrFn)
       if (!this.getter) {
         this.getter = noop
@@ -99,10 +104,15 @@ export default class Watcher {
    * Evaluate the getter, and re-collect dependencies.
    */
   get () {
+    // 将当前的watcher复制给Dep.target
+    // 父子组件嵌套的时候，先把父组件对应的watcher入栈
+    // 再去处理子组件的watcher，子组件处理完毕之后，再把父组件对应的watcher出栈，继续操作
     pushTarget(this)
     let value
+    // 缓存vm，vue实例
     const vm = this.vm
     try {
+      // 渲染函数中，getter是updateComponent，updateComponent执行，渲染数据到页面中
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -113,10 +123,13 @@ export default class Watcher {
     } finally {
       // "touch" every property so they are all tracked as
       // dependencies for deep watching
+      // 深度监听，监听所有子属性
       if (this.deep) {
         traverse(value)
       }
       popTarget()
+      // watcher 执行完毕
+      // 清除watcher和watcher中的dep
       this.cleanupDeps()
     }
     return value
@@ -177,6 +190,7 @@ export default class Watcher {
    * Will be called by the scheduler.
    */
   run () {
+    // 判断是否存活
     if (this.active) {
       const value = this.get()
       if (
@@ -190,6 +204,7 @@ export default class Watcher {
         // set new value
         const oldValue = this.value
         this.value = value
+        // 用户watcher，处理异常
         if (this.user) {
           try {
             this.cb.call(this.vm, value, oldValue)

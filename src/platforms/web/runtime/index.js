@@ -35,9 +35,11 @@ extend(Vue.options.directives, platformDirectives)
 extend(Vue.options.components, platformComponents)
 
 // install platform patch function
+// patch方法，编译虚拟dom
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
 // public mount method
+// mount方法，将dom挂载到页面上
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean

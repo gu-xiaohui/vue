@@ -2428,6 +2428,7 @@ function initProvide (vm) {
   }
 }
 
+// 依赖注入
 function initInjections (vm) {
   var result = resolveInject(vm.$options.inject, vm);
   if (result) {
@@ -3485,9 +3486,11 @@ function initRender (vm) {
   // so that we get proper render context inside it.
   // args order: tag, data, children, normalizationType, alwaysNormalize
   // internal version is used by render functions compiled from templates
+  // 对编译生成的render进行渲染的方法，生成h函数
   vm._c = function (a, b, c, d) { return createElement(vm, a, b, c, d, false); };
   // normalization is always applied for the public version, used in
   // user-written render functions.
+  // 对手写的render函数进行渲染的方法
   vm.$createElement = function (a, b, c, d) { return createElement(vm, a, b, c, d, true); };
 
   // $attrs & $listeners are exposed for easier HOC creation.
@@ -3751,11 +3754,13 @@ function getFirstComponentChild (children) {
 /*  */
 
 function initEvents (vm) {
+  // 存储事件名称，和函数
   vm._events = Object.create(null);
   vm._hasHookEvent = false;
   // init parent attached events
   var listeners = vm.$options._parentListeners;
   if (listeners) {
+    // 注册自定义事件
     updateComponentListeners(vm, listeners);
   }
 }
@@ -4613,6 +4618,7 @@ var sharedPropertyDefinition = {
   set: noop
 };
 
+// 将状态代理到this上
 function proxy (target, sourceKey, key) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
@@ -4663,6 +4669,7 @@ function initProps (vm, propsOptions) {
           vm
         );
       }
+      // 将所有props属性转换成getter/setter
       defineReactive(props, key, value, function () {
         if (!isRoot && !isUpdatingChildComponent) {
           warn(
@@ -4689,6 +4696,8 @@ function initProps (vm, propsOptions) {
 
 function initData (vm) {
   var data = vm.$options.data;
+  // 初始化_data, 组件中data是函数，调用函数返回结果，
+  // 如果不是函数，直接返回data
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {};
@@ -4701,10 +4710,14 @@ function initData (vm) {
     );
   }
   // proxy data on instance
+  // 获取data中的所有属性
   var keys = Object.keys(data);
+  // 获取props
   var props = vm.$options.props;
+  // 获取methods
   var methods = vm.$options.methods;
   var i = keys.length;
+  // 判断data上的成员是否和props/methods重名
   while (i--) {
     var key = keys[i];
     {
@@ -4721,7 +4734,9 @@ function initData (vm) {
         "Use prop default value instead.",
         vm
       );
+      // 判断是否以_或者$开头
     } else if (!isReserved(key)) {
+      // 将属性代理到vm中
       proxy(vm, "_data", key);
     }
   }
@@ -4839,6 +4854,7 @@ function createGetterInvoker(fn) {
 
 function initMethods (vm, methods) {
   var props = vm.$options.props;
+  // 判断是否重名，重名抛警告，判断是否$开头，如果是，跑警告
   for (var key in methods) {
     {
       if (typeof methods[key] !== 'function') {
@@ -4917,6 +4933,7 @@ function stateMixin (Vue) {
   Object.defineProperty(Vue.prototype, '$data', dataDef);
   Object.defineProperty(Vue.prototype, '$props', propsDef);
 
+  // 添加实例方法
   Vue.prototype.$set = set;
   Vue.prototype.$delete = del;
 
@@ -4964,6 +4981,7 @@ function initMixin (Vue) {
     }
 
     // a flag to avoid this being observed
+    // 如果是Vue实例，不需要被observer
     vm._isVue = true;
     // merge options
     if (options && options._isComponent) {
@@ -4984,13 +5002,22 @@ function initMixin (Vue) {
     }
     // expose real self
     vm._self = vm;
+    // 初始化跟生命周期相关的函数
     initLifecycle(vm);
+    // 初始化当前组件的事件
     initEvents(vm);
+    // 初始化render
+    // $slots, $scopedSlots, _c, $createElement, $attrs, $listeners
     initRender(vm);
+    // beforeCreate生命周期钩子函数回调
     callHook(vm, 'beforeCreate');
+    // 把inject的成员注入到vm上，依赖注入
     initInjections(vm); // resolve injections before data/props
+    // 初始化vm的_props, methods, _data, computed, watch
     initState(vm);
+    // 初始化provide，跟injections配合使用
     initProvide(vm); // resolve provide after data/props
+    // created生命周期钩子回调
     callHook(vm, 'created');
 
     /* istanbul ignore if */
@@ -5001,6 +5028,7 @@ function initMixin (Vue) {
     }
 
     if (vm.$options.el) {
+      // 挂载页面
       vm.$mount(vm.$options.el);
     }
   };
@@ -5062,39 +5090,55 @@ function resolveModifiedOptions (Ctor) {
   return modified
 }
 
+// Vue构造函数，此处不用class的原因是因为方便后续给Vue实例混入实例成员
 function Vue (options) {
   if (
     !(this instanceof Vue)
   ) {
     warn('Vue is a constructor and should be called with the `new` keyword');
   }
+  // 调用init方法
   this._init(options);
 }
 
+// 注册vm的init方法， 初始化vm
 initMixin(Vue);
+// 注册vm的$data/$props/$set/$delete/$watch方法
 stateMixin(Vue);
+// 初始化事件相关的方法，$on/$once/$off/$emit
 eventsMixin(Vue);
+// 初始化生命周期相关的混入方法， _update/$fourceUpdate/$destroy
 lifecycleMixin(Vue);
+// 混入render，$nextTick/_render
 renderMixin(Vue);
 
 /*  */
 
 function initUse (Vue) {
   Vue.use = function (plugin) {
+    // 判断是否安装过了，没安装的话，获取插件数组，或者初始化一个空数组
     var installedPlugins = (this._installedPlugins || (this._installedPlugins = []));
+    // 卧槽，原来indexOf还可以查找对象函数类型。。。
     if (installedPlugins.indexOf(plugin) > -1) {
       return this
     }
 
     // additional parameters
+    // 把参数转成数组，也就是调用use传入的第二个参数
     var args = toArray(arguments, 1);
+    // 将this(Vue)插入到install第一个入参位置
     args.unshift(this);
+    // 如果plugin带有install方法，调用install方法
     if (typeof plugin.install === 'function') {
       plugin.install.apply(plugin, args);
+      // 如果插件本身是一个函数，调用本身
     } else if (typeof plugin === 'function') {
       plugin.apply(null, args);
     }
+    // 调用的时候将argumens传入，vue, options
+    // 然后将插件保存到插件数组中
     installedPlugins.push(plugin);
+    // 返回Vue，实现链式调用
     return this
   };
 }
@@ -5102,6 +5146,7 @@ function initUse (Vue) {
 /*  */
 
 function initMixin$1 (Vue) {
+  // 将mixin传入的参数，通过mergeOptions函数，合并到Vue.options中，作为全局的参数
   Vue.mixin = function (mixin) {
     this.options = mergeOptions(this.options, mixin);
     return this
@@ -5139,6 +5184,7 @@ function initExtend (Vue) {
     var Sub = function VueComponent (options) {
       this._init(options);
     };
+    // 继承Vue，并返回组件
     Sub.prototype = Object.create(Super.prototype);
     Sub.prototype.constructor = Sub;
     Sub.cid = cid++;
@@ -5157,7 +5203,6 @@ function initExtend (Vue) {
     if (Sub.options.computed) {
       initComputed$1(Sub);
     }
-
     // allow further extension/mixin/plugin usage
     Sub.extend = Super.extend;
     Sub.mixin = Super.mixin;
@@ -5205,12 +5250,14 @@ function initComputed$1 (Comp) {
 function initAssetRegisters (Vue) {
   /**
    * Create asset registration methods.
+   * directive, filter, component
    */
   ASSET_TYPES.forEach(function (type) {
     Vue[type] = function (
       id,
       definition
     ) {
+      // 如果没有传入定义，返回之前存储的定义，反之则处理，然后返回
       if (!definition) {
         return this.options[type + 's'][id]
       } else {
@@ -5218,13 +5265,18 @@ function initAssetRegisters (Vue) {
         if ( type === 'component') {
           validateComponentName(id);
         }
+        // 判断是不是组件，并且判断定义是不是对象
         if (type === 'component' && isPlainObject(definition)) {
           definition.name = definition.name || id;
+          // Vue.extend,返回Vue子类
           definition = this.options._base.extend(definition);
         }
+        // 如果是指令，判断是不是函数，是函数的话，将传入的定义传给bind和update，所以指令
+        // 传入函数的时候，在bind和update的时候都会调用这个函数
         if (type === 'directive' && typeof definition === 'function') {
           definition = { bind: definition, update: definition };
         }
+        // 最后将definition保存到options[directives]中，如果是filter，直接存储，不做处理
         this.options[type + 's'][id] = definition;
         return definition
       }
@@ -5379,11 +5431,13 @@ function initGlobalAPI (Vue) {
       );
     };
   }
+  // 初始化vue.config对象
   Object.defineProperty(Vue, 'config', configDef);
 
   // exposed util methods.
   // NOTE: these are not considered part of the public API - avoid relying on
   // them unless you are aware of the risk.
+  // 这些工具方法不是做全局API的一部分，除非你已经意识到了某些风险，否则不要去依赖他们
   Vue.util = {
     warn: warn,
     extend: extend,
@@ -5391,17 +5445,21 @@ function initGlobalAPI (Vue) {
     defineReactive: defineReactive
   };
 
+  // 静态方法
   Vue.set = set;
   Vue.delete = del;
   Vue.nextTick = nextTick;
 
   // 2.6 explicit observable API
+  // 让一个对象可响应
   Vue.observable = function (obj) {
     observe(obj);
     return obj
   };
 
+// {/* 初始化VueOptions对象，并对其进行扩展 */}
   Vue.options = Object.create(null);
+  // 给vue.option添加components, directives, filters全局方法
   ASSET_TYPES.forEach(function (type) {
     Vue.options[type + 's'] = Object.create(null);
   });
@@ -5410,14 +5468,19 @@ function initGlobalAPI (Vue) {
   // components with in Weex's multi-instance scenarios.
   Vue.options._base = Vue;
 
+  // 注册全局组件
   extend(Vue.options.components, builtInComponents);
-
+// 注册Vue.use，用来注册组件
   initUse(Vue);
+  // 注册vue.mixin,用来实现混入
   initMixin$1(Vue);
+  // 注册vue.extend，基于传入的options返回一个组件的构造函数
   initExtend(Vue);
+  // 注册vue.directive,vue.component, vue.filter
   initAssetRegisters(Vue);
 }
 
+// 给Vue挂载静态方法
 initGlobalAPI(Vue);
 
 Object.defineProperty(Vue.prototype, '$isServer', {
@@ -9019,6 +9082,8 @@ var platformComponents = {
 /*  */
 
 // install platform specific utils
+// 判断是否是关键属性，（表单元素的input/checked/selected/muted）
+// 如果是这些属性，设置el.props属性（属性不设置到标签上）
 Vue.config.mustUseProp = mustUseProp;
 Vue.config.isReservedTag = isReservedTag;
 Vue.config.isReservedAttr = isReservedAttr;
@@ -9026,6 +9091,7 @@ Vue.config.getTagNamespace = getTagNamespace;
 Vue.config.isUnknownElement = isUnknownElement;
 
 // install platform runtime directives & components
+// 注册全局组件，v-model, v-show， transition，transitionGroup组件
 extend(Vue.options.directives, platformDirectives);
 extend(Vue.options.components, platformComponents);
 

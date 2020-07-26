@@ -27,6 +27,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     // a flag to avoid this being observed
+    // 如果是Vue实例，不需要被observer
     vm._isVue = true
     // merge options
     if (options && options._isComponent) {
@@ -49,13 +50,22 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
+    // 初始化跟生命周期相关的函数
     initLifecycle(vm)
+    // 初始化当前组件的事件
     initEvents(vm)
+    // 初始化render
+    // $slots, $scopedSlots, _c, $createElement, $attrs, $listeners
     initRender(vm)
+    // beforeCreate生命周期钩子函数回调
     callHook(vm, 'beforeCreate')
+    // 把inject的成员注入到vm上，依赖注入
     initInjections(vm) // resolve injections before data/props
+    // 初始化vm的_props, methods, _data, computed, watch
     initState(vm)
+    // 初始化provide，跟injections配合使用
     initProvide(vm) // resolve provide after data/props
+    // created生命周期钩子回调
     callHook(vm, 'created')
 
     /* istanbul ignore if */
@@ -66,6 +76,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     if (vm.$options.el) {
+      // 挂载页面
       vm.$mount(vm.$options.el)
     }
   }

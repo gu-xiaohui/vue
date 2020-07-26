@@ -163,9 +163,11 @@ function callActivatedHooks (queue) {
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
+  // 防止watcher被重复处理
   if (has[id] == null) {
     has[id] = true
     if (!flushing) {
+      // 不是正在处理的watcher，插入到队列中
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id

@@ -195,11 +195,13 @@ export function mountComponent (
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
   new Watcher(vm, updateComponent, noop, {
+    // noop,空函数，用户watcher有用
     before () {
       if (vm._isMounted && !vm._isDestroyed) {
         callHook(vm, 'beforeUpdate')
       }
     }
+    // true表示是渲染Watcher
   }, true /* isRenderWatcher */)
   hydrating = false
 

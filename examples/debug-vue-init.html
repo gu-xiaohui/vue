@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>调试Vue初始化过程</title>
+</head>
+<body>
+  <div id="app">
+    <h2>{{msg}}</h2>
+    {{msg}}
+    <hr>
+    {{count}}
+    <hr>
+    {{arr}}
+  </div>
+  <script src="./../dist/vue.js"></script>
+  <script>
+    const instance = new Vue({
+      el: '#app',
+      data: {
+        // msg: 'Hello World',
+        // count: 100,
+        arr: [1, 2, 3]
+      },
+      // template: '<h1>Hello Xiaohui</h1>',
+      // render: h => h('h1', 'Hello Vue')
+    }).$mount('#app')
+  </script>
+</body>
+</html>
