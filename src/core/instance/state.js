@@ -47,10 +47,15 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 }
 
 export function initState (vm: Component) {
+  // 初始化watcher数组
   vm._watchers = []
+  // 缓存options
   const opts = vm.$options
+  // 如果options有props，初始化props
   if (opts.props) initProps(vm, opts.props)
+  // 初始化methods
   if (opts.methods) initMethods(vm, opts.methods)
+  // 有data，初始化data
   if (opts.data) {
     // 遍历成员，并注入到vue实例中
     initData(vm)
@@ -58,7 +63,9 @@ export function initState (vm: Component) {
     // 没有的话，将_data初始化为响应式空对象
     observe(vm._data = {}, true /* asRootData */)
   }
+  // 有computed，初始化computed Watcher
   if (opts.computed) initComputed(vm, opts.computed)
+  // 有watch，创建侦听器类型的Watcher
   if (opts.watch && opts.watch !== nativeWatch) {
     initWatch(vm, opts.watch)
   }
@@ -181,13 +188,18 @@ const computedWatcherOptions = { lazy: true }
 
 function initComputed (vm: Component, computed: Object) {
   // $flow-disable-line
+  // 创建空对象，存储computed watchers
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()
 
   for (const key in computed) {
+    // 获取用户定义的computed函数
     const userDef = computed[key]
+    // 如果是函数，直接将对应的函数保存到getter中
+    // 如果不是，获取函数的get方法
     const getter = typeof userDef === 'function' ? userDef : userDef.get
+    // 如果没有指定处理函数，或者没有get函数，则会报错
     if (process.env.NODE_ENV !== 'production' && getter == null) {
       warn(
         `Getter is missing for computed property "${key}".`,
@@ -209,8 +221,10 @@ function initComputed (vm: Component, computed: Object) {
     // component prototype. We only need to define computed properties defined
     // at instantiation here.
     if (!(key in vm)) {
+      // 判断是否已经存在，不存在则定义，存在则不定义
       defineComputed(vm, key, userDef)
     } else if (process.env.NODE_ENV !== 'production') {
+      // 判断是否在data或者props中，是的话告警，
       if (key in vm.$data) {
         warn(`The computed property "${key}" is already defined in data.`, vm)
       } else if (vm.$options.props && key in vm.$options.props) {
@@ -304,6 +318,7 @@ function initMethods (vm: Component, methods: Object) {
 function initWatch (vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key]
+    // 如果是数组，遍历数组，分别创建
     if (Array.isArray(handler)) {
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i])
@@ -320,13 +335,16 @@ function createWatcher (
   handler: any,
   options?: Object
 ) {
+  // 判断是否为原生对象
   if (isPlainObject(handler)) {
     options = handler
     handler = handler.handler
   }
+  // 如果是字符串，会从vue实例中寻找，也就是从methods中寻找
   if (typeof handler === 'string') {
     handler = vm[handler]
   }
+  // 铜鼓$watch注册watch
   return vm.$watch(expOrFn, handler, options)
 }
 
@@ -363,12 +381,16 @@ export function stateMixin (Vue: Class<Component>) {
     options?: Object
   ): Function {
     const vm: Component = this
+    // cb是对象，继续调用createWatcher创建watcher
     if (isPlainObject(cb)) {
       return createWatcher(vm, expOrFn, cb, options)
     }
     options = options || {}
+    // 标记为用户创建
     options.user = true
+    // 创建一个watcher对象
     const watcher = new Watcher(vm, expOrFn, cb, options)
+    // 如果立即执行，直接call
     if (options.immediate) {
       try {
         cb.call(vm, watcher.value)
@@ -376,6 +398,7 @@ export function stateMixin (Vue: Class<Component>) {
         handleError(error, vm, `callback for immediate watcher "${watcher.expression}"`)
       }
     }
+    // 返回一个unwatch函数，用来取消监听
     return function unwatchFn () {
       watcher.teardown()
     }

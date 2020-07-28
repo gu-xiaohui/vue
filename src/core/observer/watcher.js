@@ -212,6 +212,7 @@ export default class Watcher {
             handleError(e, this.vm, `callback for watcher "${this.expression}"`)
           }
         } else {
+          // 非用户watcher，直接调用
           this.cb.call(this.vm, value, oldValue)
         }
       }

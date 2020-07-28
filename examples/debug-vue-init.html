@@ -10,6 +10,7 @@
 <body>
   <div id="app">
     <h2>{{obj.full}}</h2>
+    <h2>{{fullName}}</h2>
     <!-- {{msg}} -->
     <hr>
     <!-- {{count}} -->
@@ -34,6 +35,11 @@
         objChanged(newVal, oldVal) {
           this.obj.full = newVal.name + newVal.lastName
           console.log(newVal, oldVal)
+        }
+      },
+      computed: {
+        fullName: {
+          get() { return this.obj.name }
         }
       }
       // template: '<h1>Hello Xiaohui</h1>',
