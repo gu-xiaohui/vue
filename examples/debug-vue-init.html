@@ -31,6 +31,12 @@
           full: ''
         }
       },
+      mounted() {
+        this.obj.name = 'sasa';
+        this.$nextTick().then(res => {
+          console.log(res)
+        })
+      },
       methods: {
         objChanged(newVal, oldVal) {
           this.obj.full = newVal.name + newVal.lastName

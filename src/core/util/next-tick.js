@@ -12,6 +12,7 @@ let pending = false
 
 function flushCallbacks () {
   pending = false
+  //
   const copies = callbacks.slice(0)
   callbacks.length = 0
   for (let i = 0; i < copies.length; i++) {
@@ -39,6 +40,8 @@ let timerFunc
 // completely stops working after triggering a few times... so, if native
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
+// 如果支持promise，那么nextTick传入的回调函数将以微任务的方式运行
+// 微任务在同步任务执行完毕之后运行，也就是数据改变，视图更新之后
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const p = Promise.resolve()
   timerFunc = () => {
@@ -48,6 +51,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     // microtask queue but the queue isn't being flushed, until the browser
     // needs to do some other work, e.g. handle a timer. Therefore we can
     // "force" the microtask queue to be flushed by adding an empty timer.
+    // ios中，通过一个空的定时器来兼容promise.then
     if (isIOS) setTimeout(noop)
   }
   isUsingMicroTask = true
@@ -56,6 +60,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   // PhantomJS and iOS 7.x
   MutationObserver.toString() === '[object MutationObserverConstructor]'
 )) {
+  // 如果不在IE，并且MutationObser被支持，则使用MutationObserver来调用callbacks
   // Use MutationObserver where native Promise is not available,
   // e.g. PhantomJS, iOS7, Android 4.4
   // (#6466 MutationObserver is unreliable in IE11)
@@ -74,11 +79,13 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   // Fallback to setImmediate.
   // Technically it leverages the (macro) task queue,
   // but it is still a better choice than setTimeout.
+  // 如果支持setImmediate，则用setImmediate调用
   timerFunc = () => {
     setImmediate(flushCallbacks)
   }
 } else {
   // Fallback to setTimeout.
+  // 其他的用timemout调用
   timerFunc = () => {
     setTimeout(flushCallbacks, 0)
   }
@@ -86,6 +93,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
 
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
+  // 将一个匿名函数存入callbacks数组中，在匿名函数中，会调用回调函数或者调用promise的resolve方法
   callbacks.push(() => {
     if (cb) {
       try {
@@ -97,11 +105,14 @@ export function nextTick (cb?: Function, ctx?: Object) {
       _resolve(ctx)
     }
   })
+  // 如果没在运行中
   if (!pending) {
     pending = true
+    // 运行存储的回调函数或者promise
     timerFunc()
   }
   // $flow-disable-line
+  // 没有回调函数的情况下，返回promise，并将resolve方法复制给_resolve
   if (!cb && typeof Promise !== 'undefined') {
     return new Promise(resolve => {
       _resolve = resolve
