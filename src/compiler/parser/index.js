@@ -201,6 +201,7 @@ export function parse (
     }
   }
 
+  // 解析模板
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
@@ -210,6 +211,7 @@ export function parse (
     shouldDecodeNewlinesForHref: options.shouldDecodeNewlinesForHref,
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
+    // 解析过程中的回调函数，生成AST
     start (tag, attrs, unary, start, end) {
       // check namespace.
       // inherit parent ns if there is one
@@ -221,6 +223,7 @@ export function parse (
         attrs = guardIESVGBug(attrs)
       }
 
+      // 创建AST对象
       let element: ASTElement = createASTElement(tag, attrs, currentParent)
       if (ns) {
         element.ns = ns
@@ -265,6 +268,7 @@ export function parse (
       }
 
       if (!inVPre) {
+        // 处理指令v-pre
         processPre(element)
         if (element.pre) {
           inVPre = true
@@ -277,6 +281,7 @@ export function parse (
         processRawAttrs(element)
       } else if (!element.processed) {
         // structural directives
+        // 处理结构化的指令v-for, v-if, v-once
         processFor(element)
         processIf(element)
         processOnce(element)

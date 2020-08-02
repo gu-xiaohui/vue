@@ -5,7 +5,14 @@ import { detectErrors } from './error-detector'
 import { createCompileToFunctionFn } from './to-function'
 
 export function createCompilerCreator (baseCompile: Function): Function {
+  // baseOptions，平台相关的options
+  // src/platforms/web/compiler/options.js中定义
   return function createCompiler (baseOptions: CompilerOptions) {
+    // compile作用
+    // 合并选项
+    // 编译render函数
+    // 记录错误信息
+    // 返回编译好的对象
     function compile (
       template: string,
       options?: CompilerOptions
@@ -58,10 +65,13 @@ export function createCompilerCreator (baseCompile: Function): Function {
 
       finalOptions.warn = warn
 
+      // 模板编译成render函数
+      // 模板编译核心函数
       const compiled = baseCompile(template.trim(), finalOptions)
       if (process.env.NODE_ENV !== 'production') {
         detectErrors(compiled.ast, warn)
       }
+      // 记录错误和提示信息
       compiled.errors = errors
       compiled.tips = tips
       return compiled

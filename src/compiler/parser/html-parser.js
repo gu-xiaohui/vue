@@ -58,6 +58,7 @@ export function parseHTML (html, options) {
   const canBeLeftOpenTag = options.canBeLeftOpenTag || no
   let index = 0
   let last, lastTag
+  // 一次遍历html，创建AST，属性和指令都记录在ast对应的属性中
   while (html) {
     last = html
     // Make sure we're not in a plaintext content element like script/style
